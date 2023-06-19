@@ -2,13 +2,13 @@
   <div class="mdui-row mdui-center" style="max-width: 1012px">
     <div class="mdui-col-xs-12 mdui-typo">
       <h1 class="mdui-m-t-0">{{ $t('app.title') }}</h1>
-      <p
+      <!-- <p
         >Github: <a :href="$root.githubRepo" target="_blank">arkntools/arknights-toolbox</a> (<a
           :href="`${$root.githubRepo}/discussions`"
           target="_blank"
           >discussions</a
         >)</p
-      >
+      > -->
       <Welcome />
       <DataStatus />
       <h2>{{ $t('common.setting') }}</h2>
@@ -121,9 +121,9 @@
       <p
         >本项目所使用的游戏资源（包括但不限于：游戏图片、文本原文或其转译版本等）仅用于更好地表现游戏资料、增强用户体验，其版权属于上海鹰角网络科技有限公司和其关联公司</p
       >
-      <h2>{{ $t('home.contributors') }}</h2>
+      <!-- <h2>{{ $t('home.contributors') }}</h2> -->
     </div>
-    <div class="mdui-col-xs-12">
+    <!-- <div class="mdui-col-xs-12">
       <ContributorList title="Developers" :list="developers" note-prop="work" icon="code" />
     </div>
     <div class="mdui-col-xs-12">
@@ -133,7 +133,7 @@
         note-prop="translation"
         icon="g_translate"
       />
-    </div>
+    </div> -->
     <div class="mdui-col-xs-12 mdui-typo">
       <h2>{{ $t('home.changelog') }}</h2>
       <Changelog />
@@ -151,7 +151,7 @@ import LocaleSelect from '@/components/home/LocaleSelect.vue';
 import ThemeSelect from '@/components/home/ThemeSelect.vue';
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue';
 import Changelog from '@/components/home/Changelog.vue';
-import ContributorList from '@/components/home/ContributorList.vue';
+// import ContributorList from '@/components/home/ContributorList.vue';
 import { humanReadableSize } from '@/utils/formatter';
 import contributors from '@/data/contributors';
 
@@ -164,7 +164,7 @@ export default defineComponent({
     ThemeSelect,
     AddToHomeScreen,
     Changelog,
-    ContributorList,
+    // ContributorList,
   },
   data() {
     return {
