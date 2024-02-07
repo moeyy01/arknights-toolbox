@@ -31,7 +31,7 @@ export const usePenguinDataStore = defineStore('penguinData', () => {
     };
   };
 
-  const fetchPenguinData = async (server, host = 'penguin-stats.io') => {
+  const fetchPenguinData = async (server, host = 'penguin-stats.cn') => {
     try {
       const data = await fetch(
         `https://${host}/PenguinStats/api/v2/result/matrix?server=${server}`,

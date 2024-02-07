@@ -6,7 +6,7 @@ const { ajax } = Mdui.JQ;
 
 const JSON_STORAGE_BASE_URL = IS_DEV
   ? 'http://localhost:8787/material'
-  : 'https://arknights-toolbox-json-storage.lolicon.app/material';
+  : 'https://arknights-toolbox-json-storage.moeyy.cn/material';
 
 const promisedAjax = options =>
   new Promise((resolve, reject) => {

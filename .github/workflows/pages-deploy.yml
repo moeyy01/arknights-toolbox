@@ -1,59 +1,49 @@
-name: Deploy to Pages
+name: Build and deploy
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - master
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package.json'
-      - 'vue.config.js'
-      - '.github/workflows/pages-deploy.yml'
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy webhook
+      - name: Checkout Repository master branch
+        uses: actions/checkout@master
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@master
+        with:
+          node-version: '18.x'
+          
+      - name: Install and Build
         run: |
-          [ ! -z "${{ secrets.DEPLOY_WEBHOOK }}" ] && curl -X POST "${{ secrets.DEPLOY_WEBHOOK }}" || true
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node.js 16
-        uses: actions/setup-node@v3
+          yarn install --frozen-lockfile
+          yarn run list
+          yarn run build
+
+      - name: Set Config
+        uses: manyuanrong/setup-ossutil@master
         with:
-          node-version: 16
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
-      - name: Lint
-        run: yarn run lint
-      - name: Build
-        run: yarn run build
-        env:
-          VUE_APP_SHA: ${{ github.sha }}
-          VUE_APP_HTTPS: ${{ secrets.HTTPS }}
-          VUE_APP_GTAG: ${{ secrets.GTAG }}
-          VUE_APP_CDN: ${{ secrets.CDN }}
-          VUE_APP_DATA_BASE_URL: ${{ secrets.DATA_BASE_URL }}
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: './dist'
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    concurrency:
-      group: 'pages'
-      cancel-in-progress: true
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
+          endpoint: oss-cn-hongkong.aliyuncs.com
+          access-key-id: ${{ secrets.OSS_KEY }}
+          access-key-secret: ${{ secrets.OSS_SECRET }}
+
+      - name: Delete Files
+        run: |
+          ossutil rm -rf oss://arknights-toolbox/
+      
+      - name: Upload Files
+        run: |
+          ossutil cp -j 200 -rf dist/ oss://arknights-toolbox/
+
+      - name: Get API Access Token
+        run: |
+          ACCESS_TOKEN=$(curl -s -X POST http://${{ secrets.CDN_API }}/APIAccessTokenService/getAPIAccessToken -d '{"type": "admin", "accessKeyId": "${{ secrets.CDN_ACCESSKEYID }}", "accessKey": "${{ secrets.CDN_ACCESSKEY }}"}' | jq -r '.data.token')
+          echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
+
+      - name: Cache purge Task
+        run: |
+          ACCESS_TOKEN=$ACCESS_TOKEN
+          curl -X POST http://${{ secrets.CDN_API }}/HTTPCacheTaskService/createHTTPCacheTask -H "X-Edge-Access-Token: $ACCESS_TOKEN" -d '{"type": "purge", "keyType": "prefix", "keys": ["https://moeyy.cn/arknights"]}'
