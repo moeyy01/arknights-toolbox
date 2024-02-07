@@ -12,10 +12,10 @@ jobs:
       - name: Checkout Repository master branch
         uses: actions/checkout@master
 
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js 16.x
         uses: actions/setup-node@master
         with:
-          node-version: '18.x'
+          node-version: '16.x'
           
       - name: Install and Build
         run: |
