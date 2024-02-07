@@ -1,36 +1,38 @@
 import _ from 'lodash';
-import { defineComponent, computed } from 'vue';
+import { defineComponent, computed, markRaw } from 'vue';
 import { mapState, mapActions } from 'pinia';
 import { Base64 } from 'js-base64';
 import Linprog from 'javascript-lp-solver';
-import md5 from 'js-md5';
 import { Drag, DropList } from 'vue-easy-dnd';
 import VueTagsInput from '@johmun/vue-tags-input';
 
 import DataImg from '@/components/DataImg.vue';
-import ArknNumItem from '@/components/ArknNumItem.vue';
 import CultivateGuide from '@/components/material/CultivateGuide.vue';
+import PlannerDialog from '@/components/material/PlannerDialog.vue';
+import DropDialog from '@/components/material/DropDialog.vue';
+import DataSyncDialog from '@/components/material/DataSyncDialog.vue';
 import PresetTodoDialog from '@/components/material/PresetTodoDialog.vue';
-import PlanSetting from '@/components/material/PlanSetting.vue';
 import PlanSettingDialog from '@/components/material/PlanSettingDialog.vue';
 import StageSelectDialog from '@/components/material/StageSelectDialog.vue';
 import ImportConfirmDialog from '@/components/material/ImportConfirmDialog.vue';
 import AccountManageDialog from '@/components/material/AccountManageDialog.vue';
+import PresetSettingDialog from '@/components/material/PresetSettingDialog.vue';
+import IreneCalculatorDialog from '@/components/material/IreneCalculatorDialog.vue';
+import LazyDialog from '@/components/LazyDialog.vue';
 
 import Ajax from '@/utils/ajax';
-import safelyParseJSON from '@/utils/safelyParseJSON';
 import * as clipboard from '@/utils/clipboard';
 import pickClone from '@/utils/pickClone';
 import { MATERIAL_TAG_BTN_COLOR } from '@/utils/constant';
 import MultiAccount from '@/utils/MultiAccount';
+import NamespacedLocalStorage from '@/utils/NamespacedLocalStorage';
 import { useDataStore, MaterialTypeEnum, PURCHASE_CERTIFICATE_ID } from '@/store/data';
 import { usePenguinDataStore } from '@/store/penguinData';
 import { useMaterialValueStore } from '@/store/materialValue';
 
 const multiAccount = new MultiAccount('material');
 
-const SYNC_CODE_VER = 6;
-const SYNC_API_KEY_VER = 1;
+const SYNC_CODE_VER = 7;
 
 const enumOccPer = {
   '-1': 'SYNT',
@@ -100,7 +102,6 @@ const defaultData = {
     planCardExpFirst: false,
     planCardExpFirstThreshold: 1,
     [`syncCodeV${SYNC_CODE_VER}`]: '',
-    [`syncApiKeyV${SYNC_API_KEY_VER}`]: '',
     autoSyncUpload: false,
     planStageBlacklist: [],
     simpleModeOrderedByRareFirst: false,
@@ -120,17 +121,12 @@ export default defineComponent({
     VueTagsInput,
     CultivateGuide,
     DataImg,
-    ArknNumItem,
-    PresetTodoDialog,
-    PlanSetting,
-    PlanSettingDialog,
-    StageSelectDialog,
-    ImportConfirmDialog,
-    AccountManageDialog,
+    LazyDialog,
   },
   provide() {
     return {
       setting: computed(() => this.setting),
+      parent: () => this,
     };
   },
   setup() {
@@ -142,6 +138,18 @@ export default defineComponent({
       curAccountName,
       accountList,
       switchAccount: multiAccount.switchAccount.bind(multiAccount),
+      dialogs: markRaw({
+        PlannerDialog,
+        DropDialog,
+        DataSyncDialog,
+        PresetSettingDialog,
+        PresetTodoDialog,
+        PlanSettingDialog,
+        StageSelectDialog,
+        ImportConfirmDialog,
+        AccountManageDialog,
+        IreneCalculatorDialog,
+      }),
     };
   },
   data() {
@@ -172,7 +180,6 @@ export default defineComponent({
       color: MATERIAL_TAG_BTN_COLOR,
       plannerInited: false,
       plannerInitedMd5: '',
-      plannerRequest: false,
       plannerShowMiniSetting: false,
       apbDisabled: false,
       dropDetails: null,
@@ -274,14 +281,6 @@ export default defineComponent({
       },
       set(val) {
         this.setting[`syncCodeV${SYNC_CODE_VER}`] = val;
-      },
-    },
-    syncApiKey: {
-      get() {
-        return this.setting[`syncApiKeyV${SYNC_API_KEY_VER}`];
-      },
-      set(val) {
-        this.setting[`syncApiKeyV${SYNC_API_KEY_VER}`] = val;
       },
     },
     // TODO: 企鹅物流暂时不支持繁中服
@@ -518,9 +517,7 @@ export default defineComponent({
       );
     },
     excessNum() {
-      return _.mapValues(this.inputsInt, ({ need, have }, key) =>
-        Math.max(0, have - need - this.gaps[key][0] - this.gaps[key][2]),
-      );
+      return _.mapValues(this.inputsInt, ({ have }, key) => Math.max(0, have - this.gaps[key][2]));
     },
     gaps() {
       return this.calcGaps(input => input.need);
@@ -664,7 +661,7 @@ export default defineComponent({
         : { cardExp: -10000, lmd: -432, cost: -36 * this.setting.planCardExpFirstThreshold };
     },
     plan() {
-      if (!this.plannerInited) return false;
+      if (!this.plannerInited) return null;
 
       this.$gtag.event('material_arkplanner_calc', {
         event_category: 'material',
@@ -725,7 +722,7 @@ export default defineComponent({
 
       const result = Linprog.Solve(model);
 
-      if (!result.feasible) return false;
+      if (!result.feasible) return null;
       delete result.feasible;
       delete result.result;
       delete result.bounded;
@@ -956,7 +953,10 @@ export default defineComponent({
     ...mapActions(usePenguinDataStore, ['loadPenguinData', 'fetchPenguinData']),
     ...mapActions(useMaterialValueStore, ['loadMaterialValueData', 'calcStageEfficiency']),
     isPlannerUnavailableItem(id) {
-      return this.materialTable[id]?.type === MaterialTypeEnum.MOD_TOKEN;
+      return (
+        this.materialTable[id]?.type === MaterialTypeEnum.MOD_TOKEN ||
+        !this.$root.isImplementedMaterial(id)
+      );
     },
     num10k(num) {
       return num >= 10000
@@ -978,6 +978,7 @@ export default defineComponent({
     calcGaps(gapsInitFn) {
       const inputs = this.inputsInt;
       const gaps = _.mapValues(inputs, gapsInitFn);
+      const totalNeed = _.mapValues(inputs, gapsInitFn);
       const made = _.mapValues(inputs, () => 0);
       const used = _.mapValues(inputs, () => 0);
 
@@ -989,6 +990,7 @@ export default defineComponent({
           if (this.isConvableChip({ type, rare })) continue;
           _.forIn(formula, (num, m) => {
             gaps[m] += gaps[name] * num;
+            totalNeed[m] += gaps[name] * num;
           });
         }
       });
@@ -1018,7 +1020,7 @@ export default defineComponent({
         }
       });
 
-      return _.mapValues(inputs, (v, k) => [gaps[k], made[k], used[k]]);
+      return _.mapValues(inputs, (v, k) => [gaps[k], made[k], totalNeed[k]]);
     },
     getSynthesizeMaxTimes(name) {
       const num = this.syntProdNum(name);
@@ -1175,11 +1177,23 @@ export default defineComponent({
       // ensure
       multiAccount.storage.setItem('selected', this.selected);
     },
+    showPresetBeforeAddTag(obj) {
+      const isDuplicate = obj.tag.tiClasses.includes('ti-duplicate');
+      if (isDuplicate) {
+        const tag = this.selected.presets.find(preset => preset.name === obj.tag.name);
+        if (tag) {
+          this.showPreset({ tag, clearInputAfterEdit: true }, true);
+          return;
+        }
+      }
+      this.showPreset(obj);
+    },
     showPreset(obj, edit = false) {
-      this.selectedPreset = obj;
+      this.selectedPreset =
+        edit && typeof obj.index === 'number' ? { tag: this.selected.presets[obj.index] } : obj;
       this.selectedPresetName = obj.tag.name;
       let pSetting;
-      if (edit) pSetting = _.cloneDeep(this.selected.presets[obj.index].setting);
+      if (edit) pSetting = _.cloneDeep(obj.tag.setting);
       else {
         const eliteSkills = this.elite[this.selectedPresetName]?.skills?.elite ?? [];
         pSetting = getPresetSettingTemplate(eliteSkills.length);
@@ -1211,7 +1225,10 @@ export default defineComponent({
         this.$snackbar(this.$t('cultivate.panel.preset.emptySelect'));
         return;
       }
-      this.selected.presets[this.selectedPreset.index].setting = _.cloneDeep(this.pSetting);
+      this.selectedPreset.tag.setting = _.cloneDeep(this.pSetting);
+      if (this.selectedPreset.clearInputAfterEdit) {
+        this.preset = '';
+      }
       this.usePreset();
     },
     updatePreset() {
@@ -1238,9 +1255,6 @@ export default defineComponent({
     },
     async copySyncCode() {
       if (await clipboard.setText(this.syncCode)) this.$snackbar(this.$t('common.copied'));
-    },
-    async copySyncApiKey() {
-      if (await clipboard.setText(this.syncApiKey)) this.$snackbar(this.$t('common.copied'));
     },
     saveData() {
       this.$refs.dataSyncDialog.close();
@@ -1285,13 +1299,9 @@ export default defineComponent({
     },
     cloudSaveData(silence = false) {
       const data = this.dataForSave;
-      const obj = {
-        md5: md5(JSON.stringify(data)),
-        data,
-      };
       this.dataSyncing = true;
       if (this.syncCode) {
-        Ajax.updateJson(this.syncCode, obj, this.syncApiKey)
+        Ajax.updateJson(this.syncCode, data)
           .then(() => {
             this.dataSyncing = false;
             if (!silence) this.$snackbar(this.$t('cultivate.snackbar.backupSucceeded'));
@@ -1303,8 +1313,8 @@ export default defineComponent({
             );
           });
       } else {
-        Ajax.createJson(obj, this.syncApiKey)
-          .then(id => {
+        Ajax.createJson(data)
+          .then(({ id }) => {
             this.dataSyncing = false;
             this.syncCode = id;
             this.$snackbar(this.$t('cultivate.snackbar.backupSucceeded'));
@@ -1326,9 +1336,9 @@ export default defineComponent({
     cloudRestoreData() {
       if (!this.syncCode) return;
       this.dataSyncing = true;
-      Ajax.getJson(this.syncCode, this.syncApiKey)
-        .then(({ md5: _md5, data }) => {
-          if (!_md5 || !data || _md5 !== md5(JSON.stringify(data))) {
+      Ajax.getJson(this.syncCode)
+        .then(data => {
+          if (!data) {
             this.dataSyncing = false;
             this.$snackbar(this.$t('cultivate.snackbar.restoreFailed'));
             return;
@@ -1515,12 +1525,11 @@ export default defineComponent({
       this.plannerInited = true;
     },
     showPlan() {
-      if (this.plan.cost === 0) {
+      if (!this.plan || this.plan.cost === 0) {
         this.$alert(this.$t('cultivate.planner.noNeed'), () => {}, {
           confirmText: this.$t('common.okay'),
         });
       } else {
-        this.plannerRequest = true;
         this.$nextTick(() => this.$refs.plannerDialog.open());
       }
     },
@@ -1550,7 +1559,7 @@ export default defineComponent({
           showByNum: code.startsWith('AP-'),
         });
       }
-      this.$nextTick(() => this.$refs.dropDialog.open());
+      this.$refs.dropDialog.open();
     },
     showSyntBtn(material) {
       return this.synthesizable[material.name] && sumGaps(this.autoGaps[material.name]) > 0;
@@ -1596,6 +1605,16 @@ export default defineComponent({
       const people = Math.floor(morale / 24);
       const remainder = morale % 24;
       return people > 0 ? `${people} * 24` + (remainder ? ` + ${remainder}` : '') : remainder;
+    },
+    handleImportItemsEvent(type, data) {
+      switch (type) {
+        case 'import':
+          this.importItems(data);
+          break;
+        case 'reset':
+          this.reset('have', false, false);
+          break;
+      }
     },
     importItems(items) {
       _.each(items, (num, name) => {
@@ -1733,16 +1752,20 @@ export default defineComponent({
       trailing: true,
     });
 
-    this.$root.$on('import-items', this.importItems);
+    this.$root.$on('import-items', this.handleImportItemsEvent);
     this.$root.importItemsListening = true;
 
     this.initFromStorage();
 
-    const itemsImportStorageKey = 'depot.imports';
-    if (itemsImportStorageKey in (window.localStorage || {})) {
+    const depotLs = new NamespacedLocalStorage('depot');
+    if (depotLs.has('imports')) {
+      if (depotLs.getItem('reset')) {
+        this.reset('have', false, false);
+      }
       this.ignoreNextInputsChange = false;
-      const items = safelyParseJSON(window.localStorage.getItem(itemsImportStorageKey));
-      window.localStorage.removeItem(itemsImportStorageKey);
+      const items = depotLs.getItem('imports');
+      depotLs.removeItem('reset');
+      depotLs.removeItem('imports');
       this.importItems(items);
     }
   },
@@ -1760,7 +1783,7 @@ export default defineComponent({
   },
   beforeDestroy() {
     this.$root.importItemsListening = false;
-    this.$root.$off('import-items');
+    this.$root.$off('import-items', this.handleImportItemsEvent);
     multiAccount.emitter.off('change', this.initFromStorage);
   },
 });

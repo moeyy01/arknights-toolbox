@@ -8,7 +8,7 @@
 
 </div>
 
-支持国服、美服、日服、韩服，在设置中可切换，工具箱数据在解包更新时会自动同步更新
+目前支持所有服务器，可在设置中切换，工具箱数据在解包更新时会自动同步更新
 
 宗旨是简洁美观且对移动设备友好，以及 Material Design 天下第一（。）
 
@@ -17,10 +17,6 @@
 如果有好的想法、建议、希望增加的功能，或者发现了 bug，欢迎到项目中提 issue 或 pr
 
 觉得好用的话记得向朋友推荐一下呀~
-
-繁中服现状说明：  
-由于缺少繁中服解包数据，因此无法支持繁中服，繁中服用户可以选择进度相近的美日韩服  
-繁中文本将从简中文本自动转换（会对部分文本进行修正以符合繁中服游戏内文本），如果您发现有文本与游戏内文本不符，欢迎提 issue 告知
 
 ## 使用
 
@@ -40,18 +36,17 @@
 ## 内容来源及鸣谢
 
 - [Kengxxiao/ArknightsGameData](https://github.com/Kengxxiao/ArknightsGameData)（数据）
-- [yuanyan3060/Arknights-Bot-Resource](https://github.com/yuanyan3060/Arknights-Bot-Resource)（图片）
+- [yuanyan3060/Arknights-Bot-Resource](https://github.com/yuanyan3060/Arknights-Bot-Resource)（数据、图片）
 - [灰格猫](https://github.com/gneko)（起源）
 - [企鹅物流数据统计](https://penguin-stats.io/)（掉落数据）
-- [明日方舟一图流](https://yituliu.site/)（材料价值数据）
+- [明日方舟一图流](https://ark.yituliu.cn/)（材料价值数据）
 - [材料获取最优策略](https://bbs.nga.cn/read.php?tid=17507710)（思路）
 - [OCR Space](https://ocr.space/)（OCR）
-- [ExtendsClass](https://extendsclass.com/json-storage.html)（数据同步）
 - Wiki
   - CN - [PRTS Wiki](http://prts.wiki/)
   - US - [GamePress](https://gamepress.gg/arknights/)
   - JP - [Wikiru](https://arknights.wikiru.jp/)
-  - KR - [Namu Wiki](https://namu.wiki/)
+  - KR - [Namu Wiki](https://namu.wiki/w/%EB%AA%85%EC%9D%BC%EB%B0%A9%EC%A3%BC)
 
 ## 版权声明
 

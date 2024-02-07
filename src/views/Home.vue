@@ -34,11 +34,10 @@
             :disabled="!checkLocalStorage()"
             @click="clearLocalStorage"
             >{{ $t('app.setting.clearLocalStorage') }}</button
-          ><i
-            class="mdui-icon material-icons mdui-m-r-1 help no-sl"
-            :mdui-tooltip="`{content:'${$t('app.setting.clearLocalStorageTip')}',position:'top'}`"
-            >{{ $root.dark ? 'info' : 'info_outline' }}</i
-          >{{ $t('home.used') }}{{ localStorageSize }}
+          >
+          <InfoHoverTip class="mdui-m-r-1" :content="$t('app.setting.clearLocalStorageTip')" /><span
+            >{{ $t('home.used') }}{{ localStorageSize }}</span
+          >
         </div>
         <!-- CacheStorage -->
         <div class="mdui-m-b-2">
@@ -51,11 +50,10 @@
             :disabled="!checkCacheStorage()"
             @click="clearCacheStorage"
             >{{ $t('app.setting.clearCacheStorage') }}</button
-          ><i
-            class="mdui-icon material-icons mdui-m-r-1 help no-sl"
-            :mdui-tooltip="`{content:'${$t('app.setting.clearCacheStorageTip')}',position:'top'}`"
-            >{{ $root.dark ? 'info' : 'info_outline' }}</i
-          >{{ $t('home.used') }}{{ cacheStorageSize }}
+          >
+          <InfoHoverTip class="mdui-m-r-1" :content="$t('app.setting.clearCacheStorageTip')" /><span
+            >{{ $t('home.used') }}{{ cacheStorageSize }}</span
+          >
         </div>
         <!-- IndexedDB -->
         <div>
@@ -68,11 +66,10 @@
             :disabled="!checkIndexedDB()"
             @click="clearIndexedDB"
             >{{ $t('app.setting.clearIndexedDB') }}</button
-          ><i
-            class="mdui-icon material-icons mdui-m-r-1 help no-sl"
-            :mdui-tooltip="`{content:'${$t('app.setting.clearIndexedDBTip')}',position:'top'}`"
-            >{{ $root.dark ? 'info' : 'info_outline' }}</i
-          >{{ $t('home.used') }}{{ indexDBSize }}
+          >
+          <InfoHoverTip class="mdui-m-r-1" :content="$t('app.setting.clearIndexedDBTip')" /><span
+            >{{ $t('home.used') }}{{ indexDBSize }}</span
+          >
         </div>
       </div>
       <AddToHomeScreen />
@@ -103,10 +100,15 @@
         <li>
           Wiki
           <ul>
-            <li>CN &amp; TW - <a href="http://prts.wiki" target="_blank">PRTS Wiki</a></li>
+            <li>CN - <a href="http://prts.wiki/" target="_blank">PRTS Wiki</a></li>
             <li>EN - <a href="https://gamepress.gg/arknights/" target="_blank">GamePress</a></li>
             <li>JP - <a href="https://arknights.wikiru.jp/" target="_blank">Wikiru</a></li>
-            <li>KR - <a href="https://namu.wiki/" target="_blank">Namu Wiki</a></li>
+            <li
+              >KR -
+              <a href="https://namu.wiki/w/%EB%AA%85%EC%9D%BC%EB%B0%A9%EC%A3%BC" target="_blank"
+                >Namu Wiki</a
+              >
+            </li>
           </ul>
         </li>
       </ul>
@@ -181,7 +183,7 @@ export default defineComponent({
         },
         {
           name: 'yuanyan3060/Arknights-Bot-Resource',
-          type: '图片',
+          type: '数据、图片',
           url: 'https://github.com/yuanyan3060/Arknights-Bot-Resource',
         },
         {
@@ -197,7 +199,7 @@ export default defineComponent({
         {
           name: '明日方舟一图流',
           type: '材料价值数据',
-          url: 'https://yituliu.site/',
+          url: 'https://ark.yituliu.cn/',
         },
         {
           name: '材料获取最优策略',
@@ -208,11 +210,6 @@ export default defineComponent({
           name: 'OCR Space',
           type: 'OCR',
           url: 'https://ocr.space/',
-        },
-        {
-          name: 'ExtendsClass',
-          type: '数据同步',
-          url: 'https://extendsclass.com/json-storage.html',
         },
       ],
     };
