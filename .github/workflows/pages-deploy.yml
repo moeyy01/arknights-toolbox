@@ -20,8 +20,7 @@ jobs:
       - name: Install and Build
         run: |
           yarn install --frozen-lockfile
-          yarn run list
-          yarn run build
+          yarn build
 
       - name: Set Config
         uses: manyuanrong/setup-ossutil@master
