@@ -194,7 +194,7 @@ export default defineComponent({
         {
           name: '企鹅物流数据统计',
           type: '掉落数据',
-          url: 'https://penguin-stats.io/',
+          url: 'https://penguin-stats.cn/',
         },
         {
           name: '明日方舟一图流',

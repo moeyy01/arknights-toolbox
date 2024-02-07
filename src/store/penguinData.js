@@ -31,10 +31,10 @@ export const usePenguinDataStore = defineStore('penguinData', () => {
     };
   };
 
-  const fetchPenguinData = async (server, host = 'penguin-stats.cn') => {
+  const fetchPenguinData = async server => {
     try {
       const data = await fetch(
-        `https://${host}/PenguinStats/api/v2/result/matrix?server=${server}`,
+        `https://penguin-stats.cn/PenguinStats/api/v2/result/matrix?server=${server}`,
       ).then(r => r.json());
       const newData = { time: Date.now(), data };
       dataStorage.setItem(server, newData);

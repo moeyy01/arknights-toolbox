@@ -24,7 +24,7 @@
     </i18n>
     <i18n path="cultivateGuide.texts.7" tag="li">
       <b>{{ $t('cultivateGuide.b', [$t('cultivate.panel.button.farmCalculation')]) }}</b>
-      <a href="https://penguin-stats.io/" target="_blank">{{ $t('cultivateGuide.penguinData') }}</a>
+      <a href="https://penguin-stats.cn/" target="_blank">{{ $t('cultivateGuide.penguinData') }}</a>
       <a href="https://ark.yituliu.cn/" target="_blank">{{ $t('cultivateGuide.yituliu') }}</a>
     </i18n>
   </ul>
