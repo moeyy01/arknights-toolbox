@@ -7,6 +7,7 @@ import { Drag, DropList } from 'vue-easy-dnd';
 import VueTagsInput from '@johmun/vue-tags-input';
 
 import DataImg from '@/components/DataImg.vue';
+import LazyDialog from '@/components/LazyDialog.vue';
 import CultivateGuide from '@/components/material/CultivateGuide.vue';
 import PlannerDialog from '@/components/material/PlannerDialog.vue';
 import DropDialog from '@/components/material/DropDialog.vue';
@@ -18,7 +19,7 @@ import ImportConfirmDialog from '@/components/material/ImportConfirmDialog.vue';
 import AccountManageDialog from '@/components/material/AccountManageDialog.vue';
 import PresetSettingDialog from '@/components/material/PresetSettingDialog.vue';
 import IreneCalculatorDialog from '@/components/material/IreneCalculatorDialog.vue';
-import LazyDialog from '@/components/LazyDialog.vue';
+import SklandSettingDialog from '@/components/material/SklandSettingDialog.vue';
 
 import Ajax from '@/utils/ajax';
 import * as clipboard from '@/utils/clipboard';
@@ -29,6 +30,7 @@ import NamespacedLocalStorage from '@/utils/NamespacedLocalStorage';
 import { useDataStore, MaterialTypeEnum, PURCHASE_CERTIFICATE_ID } from '@/store/data';
 import { usePenguinDataStore } from '@/store/penguinData';
 import { useMaterialValueStore } from '@/store/materialValue';
+import { useSklandStore } from '@/store/skland';
 
 const multiAccount = new MultiAccount('material');
 
@@ -107,7 +109,7 @@ const defaultData = {
     simpleModeOrderedByRareFirst: false,
     penguinUseCnServer: false,
     minSampleNum: 0,
-    clearOwnedBeforeImportFromJSON: false,
+    clearOwnedBeforeImportFromJSON: true,
     showExcessNum: false,
     minApEfficiencyPercent: 0,
   },
@@ -149,6 +151,7 @@ export default defineComponent({
         ImportConfirmDialog,
         AccountManageDialog,
         IreneCalculatorDialog,
+        SklandSettingDialog,
       }),
     };
   },
@@ -275,6 +278,7 @@ export default defineComponent({
       },
     }),
     ...mapState(usePenguinDataStore, ['penguinData', 'curPenguinDataServer']),
+    ...mapState(useSklandStore, { sklandCredValid: 'credValid' }),
     syncCode: {
       get() {
         return this.setting[`syncCodeV${SYNC_CODE_VER}`];
@@ -424,8 +428,8 @@ export default defineComponent({
       });
       return table;
     },
-    implementedElite() {
-      return _.pickBy(this.elite, (o, name) => this.$root.isImplementedChar(name));
+    unreleasedElite() {
+      return _.pickBy(this.elite, (o, name) => this.$root.isReleasedChar(name));
     },
     compressedInputs: {
       get() {
@@ -543,7 +547,7 @@ export default defineComponent({
             if (rare) return this.selected.rare[rare - 1] ? Array.from(set) : [];
             return this.selected.type[type] ? Array.from(set) : [];
           })();
-          return new Set(items.filter(id => this.$root.isImplementedMaterial(id)));
+          return new Set(items.filter(id => this.$root.isReleasedMaterial(id)));
         });
       }
       const result = _.mapValues(this.selected.type, (v, type) => {
@@ -602,7 +606,7 @@ export default defineComponent({
     presetItems() {
       const input = this.$root.pureName(this.preset);
       const result = _.transform(
-        Object.keys(this.implementedElite),
+        Object.keys(this.unreleasedElite),
         (arr, name) => {
           const search = this.$root
             .getSearchGroup(this.characterTable[name])
@@ -627,7 +631,7 @@ export default defineComponent({
     },
     presetUniequip() {
       return this.sp?.uniequip.filter(
-        ({ id }) => this.$root.isImplementedUniequip(id) || this.pSetting.uniequip[id]?.[0],
+        ({ id }) => this.$root.isReleasedUniequip(id) || this.pSetting.uniequip[id]?.[0],
       );
     },
     sp() {
@@ -952,10 +956,11 @@ export default defineComponent({
     ...mapActions(useDataStore, ['getStageTable']),
     ...mapActions(usePenguinDataStore, ['loadPenguinData', 'fetchPenguinData']),
     ...mapActions(useMaterialValueStore, ['loadMaterialValueData', 'calcStageEfficiency']),
+    ...mapActions(useSklandStore, ['fetchSklandCultivate']),
     isPlannerUnavailableItem(id) {
       return (
         this.materialTable[id]?.type === MaterialTypeEnum.MOD_TOKEN ||
-        !this.$root.isImplementedMaterial(id)
+        !this.$root.isReleasedMaterial(id)
       );
     },
     num10k(num) {
@@ -1082,7 +1087,7 @@ export default defineComponent({
         },
       );
 
-      this.$$(dialog.$dialog[0]).on('close.mdui.dialog', () => {
+      this.$$(dialog.$dialog[0]).one('close.mdui.dialog', () => {
         if (dropFocus) this.showDropDetail({ name: dropFocus });
       });
 
@@ -1633,6 +1638,22 @@ export default defineComponent({
       );
       return obj;
     },
+    // 从森空岛导入
+    async importFromSkland() {
+      if (!this.sklandCredValid) {
+        this.$refs.sklandSettingDialog.open();
+        return;
+      }
+      try {
+        const items = await this.fetchSklandCultivate();
+        const obj = _.fromPairs(
+          items.filter(({ count }) => Number(count)).map(({ id, count }) => [id, Number(count)]),
+        );
+        this.showImportConfirm(obj);
+      } catch (e) {
+        this.$snackbar(String(e));
+      }
+    },
     // 从 json 导入
     async importFromJSON() {
       const text = await clipboard.readText();
@@ -1742,7 +1763,7 @@ export default defineComponent({
       return (
         (this.inputsInt[id].need > 0 || gap > 0) &&
         (this.setting.hideEnough ? gap > 0 : true) &&
-        this.$root.isImplementedMaterial(id)
+        this.$root.isReleasedMaterial(id)
       );
     },
   },

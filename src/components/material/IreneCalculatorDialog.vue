@@ -15,19 +15,27 @@
         <mdui-switch v-model="settings.isGuardOrSniper" :truncate="true">{{
           $t('ireneCalc.settings.isGuardOrSniper')
         }}</mdui-switch>
-        <mdui-switch v-if="isAscalonImplemented" v-model="settings.useAscalon" :truncate="true"
+        <mdui-switch v-if="isAscalonUnreleased" v-model="settings.useAscalon" :truncate="true"
           >{{ $t(`character.${ASCALON_ID}`) }} (+5%)</mdui-switch
         >
         <div class="inline-block">
           <span class="mdui-m-r-1">{{ $t('ireneCalc.settings.initSpLv') }}</span>
           <div class="mdui-btn-group">
             <button
-              v-for="i in 3"
-              :key="i"
+              v-for="{ value, half } in startStageButtons"
+              :key="`${value}-${half}`"
               class="mdui-btn"
-              :class="{ 'mdui-btn-active': settings.startStage === i }"
-              @click="settings.startStage = i"
-              >{{ i }}</button
+              :class="{
+                'mdui-btn-active': settings.startStage === value && settings.startWithHalf === half,
+              }"
+              @click="
+                () => {
+                  settings.startStage = value;
+                  settings.startWithHalf = half;
+                }
+              "
+              >{{ value
+              }}{{ half || value === 1 ? '' : ` (${$t('ireneCalc.settings.notHalved')})` }}</button
             >
           </div>
         </div>
@@ -155,11 +163,12 @@ dayjs.extend(duration);
 dayjs.extend(isToday);
 dayjs.extend(isTomorrow);
 
-const isImplementedChar = inject('isImplementedChar');
+const isReleasedChar = inject('isReleasedChar');
 
 const nls = new NamespacedLocalStorage('ireneCalc');
 
 const ELITE_1_TIME = 8 * 3600;
+const ELITE_2_TIME = 16 * 3600;
 const ELITE_2_TIME_HALF = 8 * 3600;
 const ELITE_3_TIME_HALF = 12 * 3600;
 const ELITE_IRENE_REAL_TIME = 5 * 3600;
@@ -169,6 +178,25 @@ const ELITE_ASCALON_ACC = 0.05;
 const FORMAT_STR = 'HH:mm';
 const SETTING_STORE_KEY = 'settings';
 const ASCALON_ID = '4132_ascln';
+
+const startStageButtons = [
+  {
+    value: 1,
+    half: false,
+  },
+  {
+    value: 2,
+    half: false,
+  },
+  {
+    value: 2,
+    half: true,
+  },
+  {
+    value: 3,
+    half: true,
+  },
+];
 
 const emit = defineEmits(MDUI_DIALOG_EMITS);
 const dialogRef = ref();
@@ -181,6 +209,7 @@ const settings = reactive({
   lazyMode: false,
   isGuardOrSniper: false,
   startStage: 1,
+  startWithHalf: false,
   eliteAcc: ['', '', ''],
   useAscalon: false,
 });
@@ -191,11 +220,14 @@ const settingsNotSave = reactive({
   showTimePanel: false,
 });
 
-const isAscalonImplemented = computed(() => isImplementedChar(ASCALON_ID));
+const isAscalonUnreleased = computed(() => isReleasedChar(ASCALON_ID));
 const ascalonAcc = computed(() =>
-  settings.useAscalon && isAscalonImplemented.value ? ELITE_ASCALON_ACC : 0,
+  settings.useAscalon && isAscalonUnreleased.value ? ELITE_ASCALON_ACC : 0,
 );
 const ireneAcc = computed(() => (settings.isGuardOrSniper ? ELITE_IRENE_ACC : 0));
+const elite2time = computed(() =>
+  settings.startStage === 2 && !settings.startWithHalf ? ELITE_2_TIME : ELITE_2_TIME_HALF,
+);
 
 const customStartTime = computed({
   get: () => {
@@ -274,7 +306,7 @@ const realTime1a = computed(
 const realTime1r = computed(() => basicTimeIrene.value / eliteTimeAccRatio.value[0]);
 // 专二时加速干员占用的实际时间
 const realTime2a = computed(
-  () => (ELITE_2_TIME_HALF - basicTimeIrene.value) / eliteTimeAccRatio.value[1],
+  () => (elite2time.value - basicTimeIrene.value) / eliteTimeAccRatio.value[1],
 );
 // 专二时换艾丽妮的剩余时间
 const realTime2r = computed(() => basicTimeIrene.value / eliteTimeAccRatio.value[1]);
@@ -284,7 +316,7 @@ const realTime3 = computed(() => ELITE_3_TIME_HALF / eliteTimeAccRatio.value[2])
 // 懒人专一实际时间
 const realLazyTime1 = computed(() => ELITE_1_TIME / eliteIreneTimeAccRatio.value);
 // 懒人专二实际时间
-const realLazyTime2 = computed(() => ELITE_2_TIME_HALF / eliteIreneTimeAccRatio.value);
+const realLazyTime2 = computed(() => elite2time.value / eliteIreneTimeAccRatio.value);
 
 const realTimeArrayA = [realTime1a, realTime2a];
 const realTimeArrayR = [realTime1r, realTime2r];

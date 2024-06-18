@@ -62,8 +62,8 @@
             <mdui-switch
               v-if="$root.serverNotCN"
               class="mdui-m-r-2"
-              v-model="setting.showNotImplemented"
-              >{{ $t('riic.setting.showNotImplemented') }}</mdui-switch
+              v-model="setting.showUnreleased"
+              >{{ $t('riic.setting.showUnreleased') }}</mdui-switch
             >
           </div>
         </div>
@@ -163,7 +163,7 @@ export default defineComponent({
     tagDisplay,
     setting: {
       hideIrrelevant: false,
-      showNotImplemented: false,
+      showUnreleased: false,
     },
     settingList: ['hideIrrelevant'],
     drawer: null,
@@ -171,7 +171,7 @@ export default defineComponent({
     nameFilterInput: '',
     nameFilter: '',
     updateNameFilter: _.debounce(function (val) {
-      this.nameFilter = val;
+      this.nameFilter = this.$root.pureName(val);
     }, 500),
   }),
   watch: {
@@ -206,7 +206,7 @@ export default defineComponent({
       const result = _.transform(
         this.buildingChar,
         (arr, skills, name) => {
-          if (!this.setting.showNotImplemented && !this.$root.isImplementedChar(name)) return;
+          if (!this.setting.showUnreleased && !this.$root.isReleasedChar(name)) return;
           if (this.selected) {
             const relevantSkills = skills.filter(this.isSkillRelevant);
             if (relevantSkills.length > 0) {

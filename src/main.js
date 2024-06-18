@@ -1,4 +1,5 @@
 import 'mdui/dist/css/mdui.css';
+import './utils/migration';
 import './registerServiceWorker';
 import _ from 'lodash';
 import Vue from 'vue';
@@ -55,7 +56,7 @@ new Vue({
   render: h => h(App),
   provide() {
     return {
-      isImplementedChar: this.isImplementedChar,
+      isReleasedChar: this.isReleasedChar,
     };
   },
   data: {
@@ -184,9 +185,9 @@ new Vue({
         }
       },
     },
-    isImplementedGradedUniequip() {
+    isGradedUniequipReleased() {
       // 分级模组和黑键同期实装
-      return this.isImplementedChar('4046_ebnhlz');
+      return this.isReleasedChar('4046_ebnhlz');
     },
   },
   methods: {
@@ -206,13 +207,13 @@ new Vue({
         });
       }
     },
-    isImplementedChar(name) {
+    isReleasedChar(name) {
       return name in this.i18nServerMessages.character;
     },
-    isImplementedMaterial(name) {
+    isReleasedMaterial(name) {
       return name in this.i18nServerMessages.material;
     },
-    isImplementedUniequip(id) {
+    isReleasedUniequip(id) {
       return id in (this.i18nServerMessages.uniequip || {});
     },
     updateTitle() {
@@ -331,30 +332,12 @@ new Vue({
       nls.setItem('server', this.server);
     } else this.server = server;
 
-    // 禁止 iOS 缩放
-    (() => {
-      document.addEventListener(
-        'touchstart',
-        event => {
-          if (event.touches.length > 1) {
-            event.preventDefault();
-          }
-        },
-        { passive: false },
-      );
-      let lastTouchEnd = 0;
-      document.addEventListener(
-        'touchend',
-        event => {
-          const now = Date.now();
-          if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-          }
-          lastTouchEnd = now;
-        },
-        false,
-      );
-    })();
+    // 禁止 iOS 双指缩放
+    document.addEventListener('gesturestart', function (event) {
+      event.preventDefault();
+    });
+    // 配合 touch-action: manipulation; 禁止 iOS 双击缩放
+    document.body.addEventListener('click', () => {});
 
     // 初始化工具箱数据
     this.initData();

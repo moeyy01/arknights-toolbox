@@ -2,8 +2,9 @@
   "title": "Irene Calculator",
   "settings": {
     "lazyMode": "Lazy mode",
-    "isGuardOrSniper": "Guard/Sniper",
+    "isGuardOrSniper": "+30%",
     "initSpLv": "Initial level",
+    "notHalved": "not halved",
     "spBonus": "Lv.{i} speed+%",
     "customStartTime": "Custom start time"
   },

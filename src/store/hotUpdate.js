@@ -6,7 +6,7 @@ import { createInstance } from 'localforage';
 import EventEmitter from 'eventemitter3';
 import i18n from '@/i18n';
 
-const CUR_VERSION = '2.2.';
+const CUR_VERSION = '2.3.';
 
 const dataStorage = createInstance({ name: 'toolbox-data' });
 const metaStorage = createInstance({ name: 'toolbox-data-meta' });
@@ -55,7 +55,7 @@ export const DataStatus = {
 };
 
 export const useHotUpdateStore = defineStore('hotUpdate', () => {
-  const baseURL = ref(process.env.VUE_APP_DATA_BASE_URL?.replace(/\/$/, '') || '/data');
+  const baseURL = process.env.VUE_APP_DATA_BASE_URL?.replace(/\/$/, '') || '/data';
   const mapMd5 = ref('');
   const timestamp = ref(0);
   const version = ref('');
@@ -139,7 +139,7 @@ export const useHotUpdateStore = defineStore('hotUpdate', () => {
 
     try {
       dataStatus.value = DataStatus.CHECKING;
-      const check = await fetchData(`${baseURL.value}/check.json`);
+      const check = await fetchData(`${baseURL}/check.json`);
 
       if (!check.version.startsWith(CUR_VERSION)) {
         throw new Error(i18n.t('hotUpdate.error.appNeedUpdate'));
@@ -158,7 +158,7 @@ export const useHotUpdateStore = defineStore('hotUpdate', () => {
       downloadedDataNum.value = 0;
       totalDataNum.value = 0;
 
-      const newMapMd5 = await fetchData(`${baseURL.value}/map.${check.mapMd5}.json`);
+      const newMapMd5 = await fetchData(`${baseURL}/map.${check.mapMd5}.json`);
       const needUpdateUrlMap = getDataUrlMap(
         _.pickBy(
           newMapMd5,
@@ -232,7 +232,7 @@ export const useHotUpdateStore = defineStore('hotUpdate', () => {
   };
 
   const getDataUrl = (key, md5 = md5Map.value[key]) => {
-    return `${baseURL.value}/${key}`.replace(/\.[^.]+$/, `.${md5}$&`);
+    return `${baseURL}/${key}`.replace(/\.[^.]+$/, `.${md5}$&`);
   };
 
   const getDataUrlMap = targetMap => _.mapValues(targetMap, (md5, key) => getDataUrl(key, md5));
