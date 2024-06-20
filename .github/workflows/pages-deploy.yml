@@ -37,12 +37,11 @@ jobs:
         run: |
           ossutil cp -j 200 -rf dist/ oss://arknights-toolbox/
 
-      # - name: Get API Access Token
-      #   run: |
-      #     ACCESS_TOKEN=$(curl -s -X POST http://${{ secrets.CDN_API }}/APIAccessTokenService/getAPIAccessToken -d '{"type": "admin", "accessKeyId": "${{ secrets.CDN_ACCESSKEYID }}", "accessKey": "${{ secrets.CDN_ACCESSKEY }}"}' | jq -r '.data.token')
-      #     echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
-
-      # - name: Cache purge Task
-      #   run: |
-      #     ACCESS_TOKEN=$ACCESS_TOKEN
-      #     curl -X POST http://${{ secrets.CDN_API }}/HTTPCacheTaskService/createHTTPCacheTask -H "X-Edge-Access-Token: $ACCESS_TOKEN" -d '{"type": "purge", "keyType": "prefix", "keys": ["https://moeyy.cn/arknights"]}'
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 5c5866bc9a741374b75a7accbb71ab2e
+          projectName: arknights-toolbox
+          directory: dist/
+          branch: main
