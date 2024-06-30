@@ -2,18 +2,27 @@
   <div class="mdui-dialog mdui-typo" ref="dialogRef">
     <div class="mdui-dialog-title mdui-p-b-1">森空岛设置</div>
     <div class="mdui-dialog-content mdui-p-b-0">
-      <div
-        class="mdui-textfield mdui-textfield-has-bottom"
-        :class="{ 'mdui-textfield-invalid': isCredInvalid }"
-      >
-        <label class="mdui-textfield-label">Cred</label>
-        <input
-          class="mdui-textfield-input"
-          v-model="store.cred"
-          type="text"
-          style="-webkit-text-security: disc"
-        />
-        <div class="mdui-textfield-error">长度应为 32，当前为 {{ store.cred.length }}</div>
+      <div class="flex flex-no-wrap">
+        <div
+          class="mdui-textfield mdui-textfield-has-bottom flex-grow"
+          :class="{ 'mdui-textfield-invalid': isCredInvalid }"
+        >
+          <label class="mdui-textfield-label">Cred</label>
+          <input
+            class="mdui-textfield-input"
+            :class="{ 'security-disc': !isCredVisible }"
+            v-model="store.cred"
+            type="text"
+          />
+          <div class="mdui-textfield-error">长度应为 32，当前为 {{ store.cred.length }}</div>
+        </div>
+        <div class="flex-no-shrink mdui-p-t-5">
+          <button class="mdui-btn mdui-btn-icon" @click="isCredVisible = !isCredVisible">
+            <i class="mdui-icon material-icons">{{
+              isCredVisible ? 'visibility_off' : 'visibility'
+            }}</i>
+          </button>
+        </div>
       </div>
       <h5 class="mdui-m-t-1">Cred 获取方法</h5>
       <ol>
@@ -61,6 +70,7 @@ defineExpose(dialog);
 
 const store = useSklandStore();
 
+const isCredVisible = ref(false);
 const isCredInvalid = computed(() => store.cred.length > 0 && !store.credValid);
 
 const copySkCredCode = async () => {
@@ -72,5 +82,8 @@ const copySkCredCode = async () => {
 pre,
 code {
   user-select: text;
+}
+.security-disc {
+  -webkit-text-security: disc;
 }
 </style>

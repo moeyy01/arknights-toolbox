@@ -1766,6 +1766,27 @@ export default defineComponent({
         this.$root.isReleasedMaterial(id)
       );
     },
+    async exportToArkLights() {
+      const data = _.flatMap(this.selected.presets, ({ name, setting: { evolve, skills } }) => {
+        const list = [];
+        // 不支持阿米娅
+        if (name === '002_amiya') return list;
+        name = this.$root.cnServerMessages.character[name];
+        // 精英化
+        const maxEvolve = evolve.findIndex(v => v) + 1;
+        if (maxEvolve > 0) list.push({ name, elite: maxEvolve });
+        // 普通技能
+        if (skills.normal[0]) list.push({ name, skills: skills.normal[2] });
+        // 专精技能
+        skills.elite.forEach(([enable, , maxLevel], i) => {
+          if (enable) list.push({ name, skill: i + 1, skill_master: maxLevel - 7 });
+        });
+        return list;
+      });
+      if (await clipboard.setText(JSON.stringify(data))) {
+        this.$snackbar(this.$t('common.copied'));
+      }
+    },
   },
   created() {
     this.throttleAutoSyncUpload = _.throttle(() => this.cloudSaveData(true), 5000, {
