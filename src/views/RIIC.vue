@@ -200,8 +200,11 @@ export default defineComponent({
       this.updateNameFilter(val);
       if (!val) this.updateNameFilter.flush();
     },
-    displaySkills(val) {
-      this.displaySkillsForPagination = val;
+    displaySkills: {
+      handler(val) {
+        this.displaySkillsForPagination = val;
+      },
+      immediate: true,
     },
   },
   computed: {
