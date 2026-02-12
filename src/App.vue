@@ -953,6 +953,12 @@ body.mdui-theme-layout-dark {
       background-color: rgba(255, 255, 255, 0.05) !important;
     }
   }
+  .mdui-btn-group .mdui-btn {
+    color: rgba(255, 255, 255, 0.54);
+    &.mdui-btn-active {
+      color: rgba(255, 255, 255, 0.87);
+    }
+  }
 }
 
 // iPhone 异形屏
