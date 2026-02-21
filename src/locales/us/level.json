@@ -3,5 +3,6 @@
   "expStage": "@:common.exp",
   "moneyStage": "@:item.4001",
   "stageResult": "Stages",
-  "expectedUsage": "Expected usage"
+  "expectedUsage": "Expected usage",
+  "people": "Qty"
 }

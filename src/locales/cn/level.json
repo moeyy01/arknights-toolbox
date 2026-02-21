@@ -3,5 +3,6 @@
   "expStage": "经验本",
   "moneyStage": "金币本",
   "stageResult": "物资筹备",
-  "expectedUsage": "预计消耗"
+  "expectedUsage": "预计消耗",
+  "people": "人数"
 }
