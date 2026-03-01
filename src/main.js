@@ -118,8 +118,8 @@ new Vue({
       this.updatedarkTheme();
     },
     i18nServerMessages(obj) {
-      this.releasedChar = new Set(Object.keys(obj.character));
-      this.releasedMaterial = new Set(Object.keys(obj.material));
+      this.releasedChar = new Set(Object.keys(obj.character || {}));
+      this.releasedMaterial = new Set(Object.keys(obj.material || {}));
       this.releasedUniequip = new Set(Object.keys(obj.uniequip || {}));
     },
   },

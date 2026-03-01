@@ -7,7 +7,8 @@
       :value="value"
       :disabled="disabled"
       @input="$emit('input', format($event.target.value))"
-      min="0"
+      :min="min"
+      :max="max"
       step="1"
       :placeholder="placeholder"
     />
@@ -27,6 +28,11 @@ export default defineComponent({
     value: [Number, String],
     placeholder: [Number, String],
     disabled: Boolean,
+    min: {
+      type: Number,
+      default: 0,
+    },
+    max: Number,
   },
   methods: {
     format(value) {

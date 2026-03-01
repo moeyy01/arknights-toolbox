@@ -20,13 +20,20 @@
                     />
                   </div>
                   <div class="with-label mdui-m-r-3">
-                    <label class="mdui-textfield-label">{{ $tt('level.expStage') }}</label>
+                    <label class="mdui-textfield-label">{{ $t('level.expStage') }}</label>
                     <span>{{ useLS }}</span>
                   </div>
-                  <div class="with-label">
-                    <label class="mdui-textfield-label">{{ $tt('level.moneyStage') }}</label>
+                  <div class="with-label mdui-m-r-3">
+                    <label class="mdui-textfield-label">{{ $t('level.moneyStage') }}</label>
                     <span>{{ useCE }}</span>
                   </div>
+                  <mdui-number-input
+                    class="count-input"
+                    v-model.number="item.count"
+                    :min="1"
+                    :max="999"
+                    >{{ $t('level.people') }}
+                  </mdui-number-input>
                 </td>
               </tr>
               <tr :key="`${i}-1`">
@@ -310,6 +317,7 @@ const CEStages = {
 
 const defaultItemInputs = {
   star: 6,
+  count: 1,
   current: {
     elite: 0,
     level: 1,
@@ -367,7 +375,12 @@ export default defineComponent({
             if (current.exp < 0) current.exp = 0;
             const maxExp = characterExp[current.elite][(current.level || 1) - 1] || 1;
             if (current.exp >= maxExp) current.exp = maxExp - 1;
+          } else if (typeof current.exp !== 'number') {
+            current.exp = 0;
           }
+
+          if (!item.count || item.count < 1) item.count = 1;
+          else if (item.count > 999) item.count = 999;
         });
 
         _.each(val.have, (v, i, o) => {
@@ -411,27 +424,29 @@ export default defineComponent({
       };
 
       const { maxLevel, characterExp, characterUpgradeCost, eliteCost } = this.level;
-      list.forEach(({ star, current, target }) => {
+      list.forEach(({ star, current, target, count }) => {
         if (!(target.elite > current.elite || target.level > current.level)) return;
-        const curMaxLevelByElite = maxLevel[star - 1];
-        // 计算最初1级所需
-        if (current.level < curMaxLevelByElite[current.elite]) {
-          const firstExp = characterExp[current.elite][current.level - 1];
-          if (firstExp) {
-            const firstNeed = firstExp - current.exp;
-            const firstCost =
-              (firstNeed / firstExp) * characterUpgradeCost[current.elite][current.level - 1];
-            expNeed += firstNeed;
-            lmdNeed += firstCost;
+        for (let n = 0; n < count; n++) {
+          const curMaxLevelByElite = maxLevel[star - 1];
+          // 计算最初1级所需
+          if (current.level < curMaxLevelByElite[current.elite]) {
+            const firstExp = characterExp[current.elite][current.level - 1];
+            if (firstExp) {
+              const firstNeed = firstExp - current.exp;
+              const firstCost =
+                (firstNeed / firstExp) * characterUpgradeCost[current.elite][current.level - 1];
+              expNeed += firstNeed;
+              lmdNeed += firstCost;
+            }
           }
-        }
-        // 后续计算
-        for (let e = current.elite; e <= target.elite; e++, expStep.push(expNeed)) {
-          if (e > current.elite) lmdNeed += eliteCost[star - 1][e - 1];
-          const maxL = e == target.elite ? target.level : curMaxLevelByElite[e];
-          for (let l = e == current.elite ? current.level + 1 : 1; l < maxL; l++) {
-            expNeed += characterExp[e][l - 1];
-            lmdNeed += characterUpgradeCost[e][l - 1];
+          // 后续计算
+          for (let e = current.elite; e <= target.elite; e++, expStep.push(expNeed)) {
+            if (e > current.elite) lmdNeed += eliteCost[star - 1][e - 1];
+            const maxL = e == target.elite ? target.level : curMaxLevelByElite[e];
+            for (let l = e == current.elite ? current.level + 1 : 1; l < maxL; l++) {
+              expNeed += characterExp[e][l - 1];
+              lmdNeed += characterUpgradeCost[e][l - 1];
+            }
           }
         }
       });
@@ -570,6 +585,9 @@ export default defineComponent({
     .mdui-textfield-label {
       white-space: nowrap;
     }
+  }
+  .count-input {
+    width: 48px;
   }
   .exp-input {
     width: 64px;
